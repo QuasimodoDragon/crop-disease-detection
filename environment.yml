@@ -3,11 +3,11 @@ channels:
   - defaults
 dependencies:
   - python=3.12.0
-  - matplotlib
-  - tensorflow
-  - kagglehub
-  - notebook
-  - scikit-learn
-  - seaborn
-  - ipywidgets
-  - validators
+  - matplotlib=3.10.0
+  - tensorflow=2.18.1
+  - kagglehub=0.2.7
+  - notebook=7.3.2
+  - scikit-learn=1.6.1
+  - seaborn=0.13.2
+  - ipywidgets=8.1.5
+  - validators=0.34.0
