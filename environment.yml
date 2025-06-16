@@ -1,0 +1,13 @@
+name: crop-disease-detection
+channels:
+  - defaults
+dependencies:
+  - python=3.12.0
+  - matplotlib
+  - tensorflow
+  - kagglehub
+  - notebook
+  - scikit-learn
+  - seaborn
+  - ipywidgets
+  - validators
