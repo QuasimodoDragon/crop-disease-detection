@@ -1,10 +1,15 @@
+import matplotlib.pyplot as plt
+import numpy as np
 import tensorflow as tf
 import pathlib
+import seaborn as sns
+import os
 
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 from keras.callbacks import CSVLogger
+from sklearn.metrics import confusion_matrix,classification_report
 
 # Import Dataset
 import kagglehub
@@ -33,8 +38,8 @@ for dir in data_dir_color.iterdir():
     if '__' in dir.name:
         dir.rename(diseased_dir / dir.name)
 
-# Basic CNN classification model referenced from https://www.tensorflow.org/tutorials/images/classification
 # Keras image parameters
+# Basic CNN image classification model referenced from https://www.tensorflow.org/tutorials/images/classification
 batch_size = 32
 img_height = 224
 img_width = 224
@@ -105,8 +110,8 @@ model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-# CSV logger code referenced from https://stackoverflow.com/questions/47843265/how-can-i-get-a-keras-models-history-after-loading-it-from-a-file-in-python?rq=3
 # Create a CSV file to store the training history
+# CSV logger code referenced from https://stackoverflow.com/questions/47843265/how-can-i-get-a-keras-models-history-after-loading-it-from-a-file-in-python?rq=3
 csv_logger = CSVLogger('training.log', separator=',', append=False)
 
 # Train the model
@@ -122,3 +127,86 @@ history = model.fit(
 
 # Save the model
 model.save("models/crop_disease_detection_model.keras", overwrite=True)
+
+# Plot model loss and accuracy
+acc = history.history['accuracy']
+val_acc = history.history['val_accuracy']
+
+loss = history.history['loss']
+val_loss = history.history['val_loss']
+
+epochs_range = range(epochs)
+
+plt.figure(figsize=(8, 8))
+plt.subplot(1, 2, 1)
+plt.plot(epochs_range, acc, label='Training Accuracy')
+plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+plt.legend(loc='lower right')
+plt.title('Training and Validation Accuracy')
+
+plt.subplot(1, 2, 2)
+plt.plot(epochs_range, loss, label='Training Loss')
+plt.plot(epochs_range, val_loss, label='Validation Loss')
+plt.legend(loc='upper right')
+plt.title('Training and Validation Loss')
+
+plt.savefig('figures/train_loss.png')
+plt.show()
+
+# Create arrays to store predicted and true labels for confusion matrix
+# Classes extracted code referenced from https://stackoverflow.com/questions/64622210/how-to-extract-classes-from-prefetched-dataset-in-tensorflow-for-confusion-matri
+y_pred = []
+y_true = []
+
+# Iterate over the validation dataset
+for images, labels in val_ds:
+    y_true.append(labels)
+    # Use model to predict labels
+    predictions = model.predict(images)
+    y_pred.append(np.argmax(predictions, axis=-1))
+
+# Convert the labels into tensors
+correct_labels = tf.concat([item for item in y_true], axis=0)
+predicted_labels = tf.concat([item for item in y_pred], axis=0)
+
+# Create a confusion matrix
+# Confusion Matrix referenced from https://www.geeksforgeeks.org/confusion-matrix-machine-learning/
+cm = confusion_matrix(correct_labels, predicted_labels)
+
+# Plot the confusion matrix and use seaborn to create a heatmap
+sns.heatmap(cm,
+            annot=True,
+            fmt='g',
+            xticklabels=class_names,
+            yticklabels=class_names)
+plt.ylabel('True')
+plt.xlabel('Predicted')
+plt.title('Confusion Matrix')
+# Move the x-axis title and labels to the top
+plt.gca().xaxis.set_label_position('top')
+plt.gca().xaxis.tick_top()
+
+plt.savefig('figures/confusion_matrix.png')
+plt.show()
+
+# Print a classification report
+print(classification_report(correct_labels, predicted_labels))
+
+# Create arrays to hold the disease names and number of images per disease
+diseases = []
+num_images = []
+
+for child in diseased_dir.iterdir():
+    if child.is_dir():
+        diseases.append(child.name)
+        num_images.append(len(os.listdir(child)))
+
+# Create a horizontal bar chart for the number of disease images
+# Bar chart code referenced from https://www.geeksforgeeks.org/bar-plot-in-matplotlib/
+plt.barh(diseases, num_images)
+plt.title('Number of Disease Images')
+plt.ylabel('Diseases')
+plt.xlabel('Images')
+
+plt.savefig('figures/num_disease_images.png')
+plt.show()
