@@ -114,8 +114,11 @@ model.compile(optimizer='adam',
 # CSV logger code referenced from https://stackoverflow.com/questions/47843265/how-can-i-get-a-keras-models-history-after-loading-it-from-a-file-in-python?rq=3
 csv_logger = CSVLogger('training.log', separator=',', append=False)
 
+# # Create early stopping callback
+# early_stopping = keras.callbacks.EarlyStopping(patience=15, restore_best_weights=True)
+
 # Train the model
-epochs = 15
+epochs = 100
 history = model.fit(
     train_ds,
     validation_data=val_ds,
